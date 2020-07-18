@@ -2,6 +2,8 @@
 
 Flashes your window when someone says your name in chat!
 
+You can add more triggers to `plugins/mentions.txt`, each on a separate line.
+
 ## Installing
 
 - Download the latest plugin from GitHub [Releases](https://github.com/SpiralP/classicube-mention-flash-plugin/releases/latest)

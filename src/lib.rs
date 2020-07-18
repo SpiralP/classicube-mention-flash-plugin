@@ -92,10 +92,11 @@ extern "C" fn init() {
                 eprintln!("{:#?}", e);
             }
 
-            filters.push(Filter::Ignore("went to".to_string()));
-            filters.push(Filter::Ignore("is afk auto".to_string()));
-            filters.push(Filter::Ignore("is no longer afk".to_string()));
+            filters.push(Filter::Ignore("went to ".to_string()));
+            filters.push(Filter::Ignore(" is afk auto".to_string()));
+            filters.push(Filter::Ignore(" is no longer afk".to_string()));
             filters.push(Filter::Contains(my_name.to_lowercase()));
+            filters.push(Filter::Contains("[>] ".to_lowercase()));
 
             println!("flashing mention filters: {:#?}", filters);
 

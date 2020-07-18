@@ -1,0 +1,26 @@
+[package]
+name = "classicube-mention-flash-plugin"
+version = "0.1.0"
+authors = ["SpiralP <spiral.palmer@gmail.com>"]
+edition = "2018"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", features = ["futures"] }
+classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
+winapi = { version = "0.3.9", features = ["winuser"] }
+
+
+# remove when 1.1.8 releases
+[patch."https://github.com/SpiralP/rust-classicube-sys.git"]
+classicube-sys = { git = "https://github.com/SpiralP//rust-classicube-sys", branch = "next" }
+
+
+[package.metadata.release]
+disable-publish = true
+pre-release-commit-message = "Release {{version}}"
+post-release-commit-message = "Begin {{next_version}}"
+tag-message = "Release version {{version}}"

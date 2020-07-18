@@ -1,7 +1,13 @@
 use classicube_helpers::events::chat::{ChatReceivedEvent, ChatReceivedEventHandler};
-use classicube_sys::*;
+use classicube_sys::{
+    Entities, IGameComponent, MsgType_MSG_TYPE_NORMAL, WindowInfo, ENTITIES_SELF_ID,
+};
 use std::{
+    collections::HashSet,
     ffi::CStr,
+    fs::File,
+    io,
+    io::{BufRead, BufReader},
     mem::size_of,
     os::raw::{c_char, c_int},
     ptr,
@@ -28,13 +34,46 @@ fn flash_window() {
     }
 }
 
+fn read_file(mentions: &mut HashSet<String>) -> io::Result<()> {
+    match File::open("plugins/mentions.txt") {
+        Ok(file) => {
+            let reader = BufReader::new(file);
+            for line in reader.lines() {
+                let line = line?;
+                let line = line.trim();
+                if line == "" {
+                    continue;
+                }
+
+                mentions.insert(line.to_string());
+            }
+        }
+
+        Err(e) => {
+            if e.kind() != io::ErrorKind::NotFound {
+                return Err(e);
+            }
+        }
+    }
+
+    Ok(())
+}
+
 extern "C" fn init() {
     thread_local!(
         static CHAT_RECEIVED: ChatReceivedEventHandler = {
             let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
             let c_str = unsafe { CStr::from_ptr(&me.NameRaw as *const c_char) };
             let my_name = c_str.to_string_lossy().to_string();
-            let my_name = my_name.to_lowercase();
+
+            let mut mentions = HashSet::new();
+            mentions.insert(my_name.to_lowercase());
+
+            if let Err(e) = read_file(&mut mentions) {
+                eprintln!("{:#?}", e);
+            }
+
+            println!("flashing mentions: {:#?}", mentions);
 
             let mut handler = ChatReceivedEventHandler::new();
 
@@ -43,10 +82,14 @@ extern "C" fn init() {
                           message,
                           message_type,
                       }| {
-                    if *message_type == MsgType_MSG_TYPE_NORMAL
-                        && message.to_lowercase().contains(&my_name)
-                    {
-                        flash_window();
+                    if *message_type == MsgType_MSG_TYPE_NORMAL {
+                        let message = message.to_lowercase();
+                        for mention in &mentions {
+                            if message.contains(mention) {
+                                flash_window();
+                                break;
+                            }
+                        }
                     }
                 },
             );

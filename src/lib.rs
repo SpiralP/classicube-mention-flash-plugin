@@ -60,6 +60,12 @@ fn read_file(mentions: &mut HashSet<String>) -> io::Result<()> {
 }
 
 extern "C" fn init() {
+    println!(
+        "init {} v{}",
+        env!("CARGO_PKG_NAME"),
+        env!("CARGO_PKG_VERSION")
+    );
+
     thread_local!(
         static CHAT_RECEIVED: ChatReceivedEventHandler = {
             let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };

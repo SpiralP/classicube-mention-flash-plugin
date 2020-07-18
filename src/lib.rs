@@ -45,7 +45,7 @@ fn read_file(mentions: &mut HashSet<String>) -> io::Result<()> {
                     continue;
                 }
 
-                mentions.insert(line.to_string());
+                mentions.insert(line.to_lowercase().to_string());
             }
         }
 

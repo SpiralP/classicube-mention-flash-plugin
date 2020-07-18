@@ -9,7 +9,7 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", features = ["futures"] }
+classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git" }
 classicube-sys = { git = "https://github.com/SpiralP/rust-classicube-sys.git" }
 winapi = { version = "0.3.9", features = ["winuser"] }
 

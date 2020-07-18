@@ -106,6 +106,12 @@ fn read_file(matches: &mut Vec<Matcher>, ignores: &mut Vec<Matcher>) -> Result<(
             } else {
                 {
                     let mut f = File::create(MENTIONS_PATH)?;
+
+                    let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
+                    let c_str = unsafe { CStr::from_ptr(&me.NameRaw as *const c_char) };
+                    let my_name = c_str.to_string_lossy().to_string();
+                    writeln!(f, "contains:{}", my_name)?;
+
                     writeln!(f, "starts with:[>] ")?;
                     writeln!(f, "not contains:went to")?;
                     writeln!(f, "not contains:is afk auto")?;
@@ -129,14 +135,8 @@ extern "C" fn init() {
 
     thread_local!(
         static CHAT_RECEIVED: ChatReceivedEventHandler = {
-            let me = unsafe { &*Entities.List[ENTITIES_SELF_ID as usize] };
-            let c_str = unsafe { CStr::from_ptr(&me.NameRaw as *const c_char) };
-            let my_name = c_str.to_string_lossy().to_string();
-
             let mut matchers = Vec::new();
             let mut ignores = Vec::new();
-
-            matchers.push(Matcher::Contains(my_name));
 
             if let Err(e) = read_file(&mut matchers, &mut ignores) {
                 eprintln!("{:#?}", e);

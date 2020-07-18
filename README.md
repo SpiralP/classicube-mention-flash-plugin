@@ -1,6 +1,8 @@
 # Mention Flash Plugin for [ClassiCube](https://www.classicube.net/)
 
-Flashes your window when someone says your name in chat!
+Flashes your taskbar when someone says your name in chat!
+
+![image](https://i.imgur.com/otokHI1.png)
 
 You can add more triggers to `plugins/mentions.txt`, each on a separate line.
 

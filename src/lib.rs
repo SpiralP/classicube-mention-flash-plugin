@@ -3,7 +3,6 @@ use classicube_sys::{
     Entities, IGameComponent, MsgType_MSG_TYPE_NORMAL, WindowInfo, ENTITIES_SELF_ID,
 };
 use std::{
-    collections::HashSet,
     ffi::CStr,
     fs::File,
     io,
@@ -34,7 +33,22 @@ fn flash_window() {
     }
 }
 
-fn read_file(mentions: &mut HashSet<String>) -> io::Result<()> {
+#[derive(Debug)]
+enum Filter {
+    Ignore(String),
+    Contains(String),
+}
+
+fn parse_line(s: &str) -> Filter {
+    if s.len() > 1 && s.starts_with('!') {
+        let s = &s[1..];
+        Filter::Ignore(s.to_lowercase())
+    } else {
+        Filter::Contains(s.to_lowercase())
+    }
+}
+
+fn read_file(filters: &mut Vec<Filter>) -> io::Result<()> {
     match File::open("plugins/mentions.txt") {
         Ok(file) => {
             let reader = BufReader::new(file);
@@ -45,7 +59,7 @@ fn read_file(mentions: &mut HashSet<String>) -> io::Result<()> {
                     continue;
                 }
 
-                mentions.insert(line.to_lowercase().to_string());
+                filters.push(parse_line(line));
             }
         }
 
@@ -72,14 +86,17 @@ extern "C" fn init() {
             let c_str = unsafe { CStr::from_ptr(&me.NameRaw as *const c_char) };
             let my_name = c_str.to_string_lossy().to_string();
 
-            let mut mentions = HashSet::new();
-            mentions.insert(my_name.to_lowercase());
+            let mut filters = Vec::new();
 
-            if let Err(e) = read_file(&mut mentions) {
+            if let Err(e) = read_file(&mut filters) {
                 eprintln!("{:#?}", e);
             }
 
-            println!("flashing mentions: {:#?}", mentions);
+            filters.push(Filter::Ignore("is afk auto".to_string()));
+            filters.push(Filter::Ignore("is no longer afk".to_string()));
+            filters.push(Filter::Contains(my_name.to_lowercase()));
+
+            println!("flashing mention filters: {:#?}", filters);
 
             let mut handler = ChatReceivedEventHandler::new();
 
@@ -90,10 +107,21 @@ extern "C" fn init() {
                       }| {
                     if *message_type == MsgType_MSG_TYPE_NORMAL {
                         let message = message.to_lowercase();
-                        for mention in &mentions {
-                            if message.contains(mention) {
-                                flash_window();
-                                break;
+                        for filter in &filters {
+                            match filter {
+                                Filter::Ignore(text) => {
+                                    if message.contains(text) {
+                                        break;
+                                    }
+                                }
+
+                                Filter::Contains(text) => {
+                                    if message.contains(text) {
+                                        println!("mention {:#?}", filter);
+                                        flash_window();
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }

@@ -23,7 +23,7 @@ fn flash_window() {
                 uCount: 1,
                 dwTimeout: 0,
             };
-            println!("{:#?}", FlashWindowEx(&mut info));
+            FlashWindowEx(&mut info);
         }
     }
 }

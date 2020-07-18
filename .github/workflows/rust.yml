@@ -15,6 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install deps
+        run: |
+          iwr -useb get.scoop.sh | iex
+          echo "##[add-path]$HOME\scoop\shims"
+          echo "##[add-path]C:\ProgramData\scoop\shims"
+          scoop install aria2
+          scoop install --arch ${{ matrix.config.bits }}bit llvm
+          echo "::set-env name=LIBCLANG_PATH::$HOME\scoop\apps\llvm\current\bin"
+
       - name: Install nightly
         uses: actions-rs/toolchain@v1
         with:

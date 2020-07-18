@@ -1,12 +1,21 @@
-use classicube_helpers::events::chat::{ChatReceivedEvent, ChatReceivedEventHandler};
-use classicube_sys::{
-    Entities, IGameComponent, MsgType_MSG_TYPE_NORMAL, WindowInfo, ENTITIES_SELF_ID,
+mod error;
+
+use crate::error::*;
+use classicube_helpers::{
+    events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
+    tab_list::remove_color,
 };
+use classicube_sys::{
+    Chat_Add, Entities, IGameComponent, MsgType_MSG_TYPE_NORMAL, OwnedString, WindowInfo,
+    ENTITIES_SELF_ID,
+};
+use regex::Regex;
 use std::{
     ffi::CStr,
+    fmt::Debug,
     fs::File,
     io,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Write},
     mem::size_of,
     os::raw::{c_char, c_int},
     ptr,
@@ -15,6 +24,8 @@ use winapi::{
     shared::windef::HWND,
     um::winuser::{FlashWindowEx, GetActiveWindow, FLASHWINFO, FLASHW_TRAY},
 };
+
+const MENTIONS_PATH: &str = "plugins/mentions.txt";
 
 fn flash_window() {
     unsafe {
@@ -34,38 +45,74 @@ fn flash_window() {
 }
 
 #[derive(Debug)]
-enum Filter {
-    Ignore(String),
+enum Matcher {
     Contains(String),
+    StartsWith(String),
+    EndsWith(String),
+    Regex(Regex),
 }
-
-fn parse_line(s: &str) -> Filter {
-    if s.len() > 1 && s.starts_with('!') {
-        let s = &s[1..];
-        Filter::Ignore(s.to_lowercase())
-    } else {
-        Filter::Contains(s.to_lowercase())
+impl Matcher {
+    fn matches(&self, text: &str) -> bool {
+        let text = remove_color(text);
+        match self {
+            Matcher::Contains(part) => text.to_lowercase().contains(&part.to_lowercase()),
+            Matcher::StartsWith(part) => text.to_lowercase().starts_with(&part.to_lowercase()),
+            Matcher::EndsWith(part) => text.to_lowercase().ends_with(&part.to_lowercase()),
+            Matcher::Regex(regex) => regex.is_match(&text),
+        }
     }
 }
 
-fn read_file(filters: &mut Vec<Filter>) -> io::Result<()> {
-    match File::open("plugins/mentions.txt") {
+fn parse_line(s: &str) -> Result<Matcher> {
+    if s.starts_with("contains:") {
+        let s = &s[9..];
+        Ok(Matcher::Contains(s.to_lowercase()))
+    } else if s.starts_with("starts with:") {
+        let s = &s[12..];
+        Ok(Matcher::StartsWith(s.to_lowercase()))
+    } else if s.starts_with("ends with:") {
+        let s = &s[10..];
+        Ok(Matcher::EndsWith(s.to_lowercase()))
+    } else if s.starts_with("regex:") {
+        let s = &s[6..];
+        Ok(Matcher::Regex(Regex::new(s)?))
+    } else {
+        bail!("couldn't create matcher for {:?}", s);
+    }
+}
+
+fn read_file(matches: &mut Vec<Matcher>, ignores: &mut Vec<Matcher>) -> Result<()> {
+    match File::open(MENTIONS_PATH) {
         Ok(file) => {
             let reader = BufReader::new(file);
             for line in reader.lines() {
                 let line = line?;
-                let line = line.trim();
                 if line == "" {
                     continue;
                 }
 
-                filters.push(parse_line(line));
+                if line.starts_with("not ") {
+                    let line = &line[4..];
+                    ignores.push(parse_line(&line)?);
+                } else {
+                    matches.push(parse_line(&line)?);
+                }
             }
         }
 
         Err(e) => {
             if e.kind() != io::ErrorKind::NotFound {
-                return Err(e);
+                return Err(e.into());
+            } else {
+                {
+                    let mut f = File::create(MENTIONS_PATH)?;
+                    writeln!(f, "starts with:[>] ")?;
+                    writeln!(f, "not contains:went to")?;
+                    writeln!(f, "not contains:is afk auto")?;
+                    writeln!(f, "not contains:is no longer afk")?;
+                }
+
+                return read_file(matches, ignores);
             }
         }
     }
@@ -86,19 +133,18 @@ extern "C" fn init() {
             let c_str = unsafe { CStr::from_ptr(&me.NameRaw as *const c_char) };
             let my_name = c_str.to_string_lossy().to_string();
 
-            let mut filters = Vec::new();
+            let mut matchers = Vec::new();
+            let mut ignores = Vec::new();
 
-            if let Err(e) = read_file(&mut filters) {
+            matchers.push(Matcher::Contains(my_name));
+
+            if let Err(e) = read_file(&mut matchers, &mut ignores) {
                 eprintln!("{:#?}", e);
+                print(format!("&cmentions.txt: &f{}", e));
             }
 
-            filters.push(Filter::Ignore("went to ".to_string()));
-            filters.push(Filter::Ignore(" is afk auto".to_string()));
-            filters.push(Filter::Ignore(" is no longer afk".to_string()));
-            filters.push(Filter::Contains(my_name.to_lowercase()));
-            filters.push(Filter::Contains("[>] ".to_lowercase()));
-
-            println!("flashing mention filters: {:#?}", filters);
+            println!("flashing mention matchers: {:#?}", matchers);
+            println!("flashing mention ignores: {:#?}", ignores);
 
             let mut handler = ChatReceivedEventHandler::new();
 
@@ -107,24 +153,21 @@ extern "C" fn init() {
                           message,
                           message_type,
                       }| {
-                    if *message_type == MsgType_MSG_TYPE_NORMAL {
-                        let message = message.to_lowercase();
-                        for filter in &filters {
-                            match filter {
-                                Filter::Ignore(text) => {
-                                    if message.contains(text) {
-                                        break;
-                                    }
-                                }
+                    if *message_type != MsgType_MSG_TYPE_NORMAL {
+                        return;
+                    }
 
-                                Filter::Contains(text) => {
-                                    if message.contains(text) {
-                                        println!("mention {:#?}", filter);
-                                        flash_window();
-                                        break;
-                                    }
-                                }
-                            }
+                    for ignore in &ignores {
+                        if ignore.matches(message) {
+                            return;
+                        }
+                    }
+
+                    for matcher in &matchers {
+                        if matcher.matches(message) {
+                            println!("mention {:#?}", matcher);
+                            flash_window();
+                            break;
                         }
                     }
                 },
@@ -155,3 +198,17 @@ pub static mut Plugin_Component: IGameComponent = IGameComponent {
     // Next component in linked list of components.
     next: ptr::null_mut(),
 };
+
+pub fn print<S: Into<String>>(s: S) {
+    let mut s = s.into();
+
+    if s.len() > 255 {
+        s.truncate(255);
+    }
+
+    let owned_string = OwnedString::new(s);
+
+    unsafe {
+        Chat_Add(owned_string.as_cc_string());
+    }
+}

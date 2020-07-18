@@ -4,7 +4,16 @@ Flashes your taskbar when someone says your name in chat!
 
 ![image](https://i.imgur.com/otokHI1.png)
 
-You can add more triggers to `plugins/mentions.txt`, each on a separate line.
+You can add more triggers to `plugins/mentions.txt`, one on each line in the format:
+
+```
+contains:<text>
+starts with:<text>
+ends with:<text>
+regex:<text>
+```
+
+Prepend "not " to ignore a certain text-part like `not contains:went to`
 
 ## Installing
 

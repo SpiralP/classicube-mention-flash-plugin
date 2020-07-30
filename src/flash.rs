@@ -99,9 +99,3 @@ pub fn flash_window() -> Result<()> {
 
     Ok(())
 }
-
-#[ignore]
-#[test]
-fn test_flash_window() {
-    flash_window().unwrap();
-}

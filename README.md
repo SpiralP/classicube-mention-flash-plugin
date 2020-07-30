@@ -2,7 +2,9 @@
 
 Flashes your taskbar when someone says your name in chat!
 
-![image](https://i.imgur.com/otokHI1.png)
+![Windows](https://i.imgur.com/otokHI1.png)
+
+![KDE Plasma](https://i.imgur.com/yslAAeQ.png)
 
 You can add more triggers to `plugins/mentions.txt`, one on each line in the format:
 

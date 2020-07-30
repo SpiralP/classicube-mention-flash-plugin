@@ -9,8 +9,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { arch: x86_64, bits: 64 }
-          - { arch: i686, bits: 32 }
+          - { arch: x86_64, bits: 64, target: x86_64-pc-windows-msvc }
+          - { arch: i686, bits: 32, target: i686-pc-windows-msvc }
 
     steps:
       - uses: actions/checkout@v2
@@ -24,11 +24,12 @@ jobs:
           scoop install --arch ${{ matrix.config.bits }}bit llvm
           echo "::set-env name=LIBCLANG_PATH::$HOME\scoop\apps\llvm\current\bin"
 
-      - name: Install nightly
+      - name: Install nightly ${{ matrix.config.target }}
         uses: actions-rs/toolchain@v1
         with:
-          target: ${{ matrix.config.arch }}-pc-windows-msvc
-          toolchain: nightly-${{ matrix.config.arch }}-pc-windows-msvc
+          # we have to use this toolchain because "libclang.dll: invalid DLL (32-bit)"
+          toolchain: nightly-${{ matrix.config.target }}
+          target: ${{ matrix.config.target }}
           override: true
 
       - name: Build
@@ -36,29 +37,110 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: build
+          args: --target ${{ matrix.config.target }}
 
       - name: Test
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/') != true
         with:
           command: test
-          args: -- --nocapture
+          args: --target ${{ matrix.config.target }} -- --nocapture
 
       - name: Build Release
         uses: actions-rs/cargo@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           command: build
-          args: --release
+          args: --target ${{ matrix.config.target }} --release
 
-      - run: Rename-Item -Path "target\release\classicube_mention_flash_plugin.dll" -NewName "classicube_mention_flash_windows_${{ matrix.config.arch }}.dll"
+      - name: Rename files
         if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          Move-Item `
+            -Path 'target\${{ matrix.config.target }}\release\classicube_mention_flash_plugin.dll' `
+            -Destination '.\classicube_mention_flash_windows_${{ matrix.config.arch }}.dll'
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            target/release/classicube_mention_flash_windows_${{ matrix.config.arch }}.dll
+            classicube_mention_flash_windows_${{ matrix.config.arch }}.dll
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  linux_x86:
+    name: Build Linux ${{ matrix.config.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu }
+          - { arch: i686, target: i686-unknown-linux-gnu }
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install x86_64 deps
+        if: matrix.config.arch == 'x86_64'
+        run: |
+          sudo apt-get -y update \
+          && sudo apt-get -y install git gcc g++ build-essential cmake clang-10 pkg-config \
+            libssl-dev libglib2.0-dev libpango1.0-dev libatk1.0-dev libgtk-3-dev libgdk-pixbuf2.0-dev \
+            libssl1.1 libnss3 libasound2 libxss1 libnspr4 \
+
+      - name: Install i686 deps
+        if: matrix.config.arch == 'i686'
+        run: |
+          sudo dpkg --add-architecture i386 \
+          && sudo apt-get -y update \
+          && sudo apt-get -y install git gcc g++ build-essential cmake clang-10 pkg-config:i386 \
+            gcc-multilib g++-multilib \
+            libssl-dev:i386 libglib2.0-dev:i386 libpango1.0-dev:i386 libatk1.0-dev:i386 libgtk-3-dev:i386 libgdk-pixbuf2.0-dev:i386 \
+            libssl1.1:i386 libnss3:i386 libasound2:i386 libxss1:i386 libnspr4:i386 \
+          && echo "::set-env name=PKG_CONFIG_ALLOW_CROSS::1"
+
+      - name: Install nightly ${{ matrix.config.target }}
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          target: ${{ matrix.config.target }}
+          override: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        if: startsWith(github.ref, 'refs/tags/') != true
+        with:
+          command: build
+          args: --target ${{ matrix.config.target }}
+
+      - name: Test
+        uses: actions-rs/cargo@v1
+        if: startsWith(github.ref, 'refs/tags/') != true
+        with:
+          command: test
+          args: --target ${{ matrix.config.target }} -- --nocapture
+
+      - name: Build Release
+        uses: actions-rs/cargo@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          command: build
+          args: --target ${{ matrix.config.target }} --release
+
+      - name: Rename files
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          mv 'target/${{ matrix.config.target }}/release/libclassicube_mention_flash_plugin.so' \
+            './classicube_mention_flash_linux_${{ matrix.config.arch }}.so' \
+          && file './classicube_mention_flash_linux_${{ matrix.config.arch }}.so'
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            classicube_mention_flash_linux_${{ matrix.config.arch }}.so
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

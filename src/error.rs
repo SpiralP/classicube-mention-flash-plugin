@@ -9,6 +9,7 @@ error_chain! {
         ParseIntError(::std::num::ParseIntError);
         ParseBoolError(::std::str::ParseBoolError);
         Utf8Error(::std::str::Utf8Error);
+        NulError(::std::ffi::NulError);
         Regex(regex::Error);
     }
 }

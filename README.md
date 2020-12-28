@@ -21,4 +21,6 @@ Prepend "not " to ignore a certain text-part like `not contains:went to`
 
 - Download the latest plugin from GitHub [Releases](https://github.com/SpiralP/classicube-mention-flash-plugin/releases/latest)
   - [classicube_mention_flash_windows_x86_64.dll](https://github.com/SpiralP/classicube-mention-flash-plugin/releases/latest/download/classicube_mention_flash_windows_x86_64.dll) for Windows 64 bit ClassiCube
-  - [classicube_mention_flash_windows_i686.dll](https://github.com/SpiralP/classicube-mention-flash-plugin/releases/latest/download/classicube_mention_flash_windows_i686.dll) for Windows 32 bit ClassiCube (steam version)
+  - [classicube_mention_flash_windows_i686.dll](https://github.com/SpiralP/classicube-mention-flash-plugin/releases/latest/download/classicube_mention_flash_windows_i686.dll) for Windows 32 bit ClassiCube
+  - [classicube_mention_flash_linux_x86_64.so](https://github.com/SpiralP/classicube-mention-flash-plugin/releases/download/v0.1.7/classicube_mention_flash_linux_x86_64.so) for Linux 64 bit ClassiCube
+  - [classicube_mention_flash_linux_i686.so](https://github.com/SpiralP/classicube-mention-flash-plugin/releases/download/v0.1.7/classicube_mention_flash_linux_i686.so) for Linux 32 bit ClassiCube

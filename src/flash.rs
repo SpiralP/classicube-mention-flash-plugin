@@ -57,7 +57,7 @@ pub fn flash_window() -> Result<()> {
 
         let window = WindowInfo.Handle as Window;
 
-        let display = XOpenDisplay(ptr::null_mut());
+        let display = XOpenDisplay(ptr::null());
         if display.is_null() {
             bail!("XOpenDisplay");
         }

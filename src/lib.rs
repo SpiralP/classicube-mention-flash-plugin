@@ -1,5 +1,6 @@
 mod error;
 mod flash;
+mod logger;
 
 use crate::error::*;
 use classicube_helpers::{
@@ -19,6 +20,7 @@ use std::{
     os::raw::{c_char, c_int},
     ptr,
 };
+use tracing::debug;
 
 const MENTIONS_PATH: &str = "plugins/mentions.txt";
 
@@ -42,17 +44,13 @@ impl Matcher {
 }
 
 fn parse_line(s: &str) -> Result<Matcher> {
-    if s.starts_with("contains:") {
-        let s = &s[9..];
+    if let Some(s) = s.strip_prefix("contains:") {
         Ok(Matcher::Contains(s.to_lowercase()))
-    } else if s.starts_with("starts with:") {
-        let s = &s[12..];
+    } else if let Some(s) = s.strip_prefix("starts with:") {
         Ok(Matcher::StartsWith(s.to_lowercase()))
-    } else if s.starts_with("ends with:") {
-        let s = &s[10..];
+    } else if let Some(s) = s.strip_prefix("ends with:") {
         Ok(Matcher::EndsWith(s.to_lowercase()))
-    } else if s.starts_with("regex:") {
-        let s = &s[6..];
+    } else if let Some(s) = s.strip_prefix("regex:") {
         Ok(Matcher::Regex(Regex::new(s)?))
     } else {
         bail!("couldn't create matcher for {:?}", s);
@@ -65,13 +63,12 @@ fn read_file(matches: &mut Vec<Matcher>, ignores: &mut Vec<Matcher>) -> Result<(
             let reader = BufReader::new(file);
             for line in reader.lines() {
                 let line = line?;
-                if line == "" {
+                if line.is_empty() {
                     continue;
                 }
 
-                if line.starts_with("not ") {
-                    let line = &line[4..];
-                    ignores.push(parse_line(&line)?);
+                if let Some(line) = line.strip_prefix("not ") {
+                    ignores.push(parse_line(line)?);
                 } else {
                     matches.push(parse_line(&line)?);
                 }
@@ -105,7 +102,9 @@ fn read_file(matches: &mut Vec<Matcher>, ignores: &mut Vec<Matcher>) -> Result<(
 }
 
 extern "C" fn init() {
-    println!(
+    logger::initialize();
+
+    debug!(
         "init {} v{}",
         env!("CARGO_PKG_NAME"),
         env!("CARGO_PKG_VERSION")
@@ -121,8 +120,8 @@ extern "C" fn init() {
                 print(format!("&cmentions.txt: &f{}", e));
             }
 
-            println!("flashing mention matchers: {:#?}", matchers);
-            println!("flashing mention ignores: {:#?}", ignores);
+            debug!("flashing mention matchers: {:#?}", matchers);
+            debug!("flashing mention ignores: {:#?}", ignores);
 
             let mut handler = ChatReceivedEventHandler::new();
 
@@ -143,7 +142,7 @@ extern "C" fn init() {
 
                     for matcher in &matchers {
                         if matcher.matches(message) {
-                            println!("mention {:#?}", matcher);
+                            debug!("mention {:#?}", matcher);
                             flash::flash_window().unwrap();
                             break;
                         }

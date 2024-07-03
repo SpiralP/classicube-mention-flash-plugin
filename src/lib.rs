@@ -1,8 +1,7 @@
-mod error;
 mod flash;
 mod logger;
 
-use crate::error::*;
+use anyhow::{bail, Result};
 use classicube_helpers::{
     events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
     tab_list::remove_color,

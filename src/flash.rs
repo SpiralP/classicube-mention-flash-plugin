@@ -1,4 +1,4 @@
-use crate::error::*;
+use anyhow::Result;
 use classicube_sys::WindowInfo;
 
 #[cfg(windows)]
@@ -29,6 +29,7 @@ pub fn flash_window() -> Result<()> {
 
 #[cfg(unix)]
 pub fn flash_window() -> Result<()> {
+    use anyhow::bail;
     use std::{ffi::CString, mem, ptr};
     use x11::xlib::{
         Atom, ClientMessage, Display, False, SubstructureNotifyMask, SubstructureRedirectMask,

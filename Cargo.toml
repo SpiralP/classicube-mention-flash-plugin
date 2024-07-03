@@ -9,9 +9,9 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
+anyhow = "1"
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git" }
 classicube-sys = "3"
-error-chain = "0.12"
 regex = "1"
 tracing = "0.1"
 tracing-subscriber = "0.3"

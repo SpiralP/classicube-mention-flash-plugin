@@ -7,12 +7,14 @@
     let
       inherit (nixpkgs) lib;
 
-      makePackages = (pkgs:
+      makePackages = (system: dev:
         let
+          pkgs = import nixpkgs {
+            inherit system;
+          };
           rustManifest = lib.importTOML ./Cargo.toml;
-        in
-        {
-          default = pkgs.rustPlatform.buildRustPackage {
+
+          defaultAttrs = {
             pname = rustManifest.package.name;
             version = rustManifest.package.version;
 
@@ -31,54 +33,47 @@
               };
             };
 
-            buildInputs = with pkgs; [
-              xorg.libX11
+
+            buildInputs = with pkgs; with xorg; [
+              libX11
             ];
+
             nativeBuildInputs = with pkgs; [
               pkg-config
               rustPlatform.bindgenHook
-            ];
+            ] ++ (if dev then
+              with pkgs; ([
+                cargo-release
+                clippy
+                rustfmt
+                rust-analyzer
+              ]) else [ ]);
           };
-        });
-    in
-    builtins.foldl' lib.recursiveUpdate { } (builtins.map
-      (system:
-        let
-          pkgs = import nixpkgs {
-            inherit system;
-          };
-
-          packages = makePackages pkgs;
         in
         {
-          devShells.${system} = packages // {
-            default =
-              let
-                allDrvsIn = (name:
-                  lib.lists.flatten (
-                    builtins.map
-                      (drv: drv.${name} or [ ])
-                      (builtins.attrValues packages)
-                  ));
-              in
-              pkgs.mkShell {
-                name = "dev-shell";
-                packages = with pkgs; [
-                  clippy
-                  rustfmt
-                  rust-analyzer
-                ];
-                buildInputs = allDrvsIn "buildInputs";
-                nativeBuildInputs = allDrvsIn "nativeBuildInputs";
-                propagatedBuildInputs = allDrvsIn "propagatedBuildInputs";
-                propagatedNativeBuildInputs = allDrvsIn "propagatedNativeBuildInputs";
-              };
-          };
-          packages.${system} = packages // {
-            default = pkgs.linkFarmFromDrvs "link-farm" (builtins.attrValues packages);
-          };
-        })
+          default = pkgs.rustPlatform.buildRustPackage defaultAttrs;
+
+          debug = (pkgs.enableDebugging {
+            inherit (pkgs) stdenv;
+            override = (attrs: pkgs.makeRustPlatform ({
+              inherit (pkgs) rustc cargo;
+            } // attrs));
+          }).buildRustPackage (
+            (defaultAttrs // {
+              pname = "${defaultAttrs.pname}-debug";
+
+              buildType = "debug";
+
+              hardeningDisable = [ "all" ];
+            })
+          );
+        }
+      );
+    in
+    builtins.foldl' lib.recursiveUpdate { } (builtins.map
+      (system: {
+        devShells.${system} = makePackages system true;
+        packages.${system} = makePackages system false;
+      })
       lib.systems.flakeExposed);
 }
-
-

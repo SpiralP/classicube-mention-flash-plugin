@@ -145,7 +145,7 @@ dependencies = [
 
 [[package]]
 name = "classicube-mention-flash-plugin"
-version = "0.1.9-alpha.0"
+version = "0.1.9"
 dependencies = [
  "anyhow",
  "classicube-helpers",

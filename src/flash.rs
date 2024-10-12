@@ -10,7 +10,7 @@ pub fn flash_window() -> Result<()> {
     };
 
     unsafe {
-        let cc_window = WindowInfo.Handle as HWND;
+        let cc_window = WindowInfo.Handle.ptr as HWND;
         let active_window = GetActiveWindow();
         if active_window != cc_window {
             let mut info = FLASHWINFO {
@@ -56,7 +56,7 @@ pub fn flash_window() -> Result<()> {
             }
         }
 
-        let window = WindowInfo.Handle as Window;
+        let window = WindowInfo.Handle.val as Window;
 
         let display = XOpenDisplay(ptr::null());
         if display.is_null() {

@@ -45,8 +45,8 @@
               with pkgs; ([
                 cargo-release
                 clippy
-                rustfmt
                 rust-analyzer
+                (rustfmt.override { asNightly = true; })
               ]) else [ ]);
           };
         in

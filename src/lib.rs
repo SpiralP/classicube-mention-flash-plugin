@@ -1,15 +1,6 @@
 mod flash;
 mod logger;
 
-use anyhow::{bail, Result};
-use classicube_helpers::{
-    events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
-    tab_list::remove_color,
-};
-use classicube_sys::{
-    Chat_Add, Entities, IGameComponent, MsgType_MSG_TYPE_NORMAL, OwnedString, ENTITIES_SELF_ID,
-};
-use regex::Regex;
 use std::{
     ffi::CStr,
     fmt::Debug,
@@ -19,6 +10,16 @@ use std::{
     os::raw::{c_char, c_int},
     ptr,
 };
+
+use anyhow::{bail, Result};
+use classicube_helpers::{
+    events::chat::{ChatReceivedEvent, ChatReceivedEventHandler},
+    tab_list::remove_color,
+};
+use classicube_sys::{
+    Chat_Add, Entities, IGameComponent, MsgType_MSG_TYPE_NORMAL, OwnedString, ENTITIES_SELF_ID,
+};
+use regex::Regex;
 use tracing::debug;
 
 const MENTIONS_PATH: &str = "plugins/mentions.txt";

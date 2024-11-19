@@ -4,6 +4,7 @@ use classicube_sys::WindowInfo;
 #[cfg(windows)]
 pub fn flash_window() -> Result<()> {
     use std::mem::size_of;
+
     use winapi::{
         shared::windef::HWND,
         um::winuser::{FlashWindowEx, GetActiveWindow, FLASHWINFO, FLASHW_TRAY},
@@ -29,8 +30,9 @@ pub fn flash_window() -> Result<()> {
 
 #[cfg(unix)]
 pub fn flash_window() -> Result<()> {
-    use anyhow::bail;
     use std::{ffi::CString, mem, ptr};
+
+    use anyhow::bail;
     use x11::xlib::{
         Atom, ClientMessage, Display, False, SubstructureNotifyMask, SubstructureRedirectMask,
         True, Window, XCloseDisplay, XDefaultRootWindow, XEvent, XInternAtom, XOpenDisplay,

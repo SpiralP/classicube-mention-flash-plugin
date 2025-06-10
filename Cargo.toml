@@ -9,7 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 anyhow = "1"
-classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git" }
+classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", branch = "main" }
 classicube-sys = "4"
 regex = "1"
 tracing = "0.1"

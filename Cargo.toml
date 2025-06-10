@@ -8,18 +8,18 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-anyhow = "1"
+anyhow = "=1.0.96"
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", branch = "main" }
-classicube-sys = "4"
-regex = "1"
-tracing = "0.1"
-tracing-subscriber = "0.3"
+classicube-sys = "=4.0.0"
+regex = "=1.11.1"
+tracing = "=0.1.41"
+tracing-subscriber = "=0.3.19"
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["winuser"] }
+winapi = { version = "=0.3.9", features = ["winuser"] }
 
 [target.'cfg(unix)'.dependencies]
-x11 = "2"
+x11 = "=2.21.0"
 
 
 [package.metadata.release]

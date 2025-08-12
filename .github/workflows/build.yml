@@ -32,7 +32,7 @@ jobs:
             target: i686-pc-windows-msvc
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Install rust
         run: |
@@ -84,7 +84,7 @@ jobs:
             target: i686-unknown-linux-gnu
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Install x86_64 deps
         if: matrix.config.arch == 'x86_64'

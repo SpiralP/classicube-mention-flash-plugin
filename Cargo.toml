@@ -8,7 +8,7 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-anyhow = "=1.0.98"
+anyhow = "=1.0.99"
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git", branch = "main" }
 classicube-sys = "=4.1.2"
 regex = "=1.11.1"

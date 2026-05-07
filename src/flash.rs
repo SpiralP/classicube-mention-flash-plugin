@@ -7,7 +7,7 @@ pub fn flash_window() -> Result<()> {
 
     use winapi::{
         shared::windef::HWND,
-        um::winuser::{FlashWindowEx, GetActiveWindow, FLASHWINFO, FLASHW_TRAY},
+        um::winuser::{FLASHW_TRAY, FLASHWINFO, FlashWindowEx, GetActiveWindow},
     };
 
     unsafe {
@@ -21,7 +21,7 @@ pub fn flash_window() -> Result<()> {
                 uCount: 1,
                 dwTimeout: 0,
             };
-            FlashWindowEx(&mut info);
+            FlashWindowEx(&raw mut info);
         }
     }
 
@@ -44,13 +44,13 @@ pub fn flash_window() -> Result<()> {
     const _NET_WM_STATE_TOGGLE: u64 = 2; // toggle property
 
     #[link(name = "X11")]
-    extern "C" {}
+    unsafe extern "C" {}
 
-    #[allow(non_snake_case)]
+    #[expect(non_snake_case, reason = "matches X11 _NET_WM_STATE_* atom names")]
     unsafe {
         unsafe fn atom<T: Into<Vec<u8>>>(display: *mut Display, name: T) -> Result<Atom> {
             let name = CString::new(name)?;
-            let atom = XInternAtom(display, name.as_ptr(), True);
+            let atom = unsafe { XInternAtom(display, name.as_ptr(), True) };
             if atom == 0 {
                 bail!("XInternAtom {:?}", name);
             } else {
@@ -91,7 +91,7 @@ pub fn flash_window() -> Result<()> {
             XDefaultRootWindow(display),
             False,
             mask,
-            &mut event,
+            &raw mut event,
         ) == 0
         {
             bail!("XSendEvent");

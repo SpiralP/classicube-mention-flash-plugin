@@ -2,7 +2,7 @@ name: release
 
 on:
   push:
-    branches: [main, master, alpha]
+    branches: [main, master, alpha, beta]
   workflow_dispatch:
 
 permissions:
@@ -19,8 +19,8 @@ jobs:
     if: "${{ ! startsWith(github.event.head_commit.message, 'chore(release): ') }}"
 
   release:
-    needs: build
     uses: SpiralP/github-reusable-workflows/.github/workflows/release.yml@03d584fb4fd838f16e8a599911e31da41fe98a0e # main
+    needs: build
     concurrency:
       group: release-${{ github.ref }}
       cancel-in-progress: false # do not cancel in-progress jobs

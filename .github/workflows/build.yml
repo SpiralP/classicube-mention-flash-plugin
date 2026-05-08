@@ -2,7 +2,7 @@ name: build
 
 on:
   pull_request:
-    branches: [main, master, alpha]
+    branches: [main, master, alpha, beta]
   workflow_call:
   workflow_dispatch:
 

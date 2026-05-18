@@ -43,7 +43,7 @@ jobs:
         run: |
           cargo build --target ${{ matrix.config.target }} --release
 
-      - uses: taiki-e/install-action@db5fb34fa772531a3ece57ca434f579eb334e0fb # v2.75.30
+      - uses: taiki-e/install-action@ec28e287910af896fd98e04056d31fa68607e7ad # v2.77.4
         with:
           tool: cargo-nextest
 
@@ -102,7 +102,7 @@ jobs:
           cargo build --target ${{ matrix.config.target }} --release
           file 'target/${{ matrix.config.target }}/release/libclassicube_mention_flash_plugin.so'
 
-      - uses: taiki-e/install-action@db5fb34fa772531a3ece57ca434f579eb334e0fb # v2.75.30
+      - uses: taiki-e/install-action@ec28e287910af896fd98e04056d31fa68607e7ad # v2.77.4
         with:
           tool: cargo-nextest
 
@@ -146,7 +146,7 @@ jobs:
           cargo build --target ${{ matrix.config.target }} --release
           file 'target/${{ matrix.config.target }}/release/libclassicube_mention_flash_plugin.dylib'
 
-      - uses: taiki-e/install-action@db5fb34fa772531a3ece57ca434f579eb334e0fb # v2.75.30
+      - uses: taiki-e/install-action@ec28e287910af896fd98e04056d31fa68607e7ad # v2.77.4
         with:
           tool: cargo-nextest
 

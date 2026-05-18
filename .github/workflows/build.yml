@@ -12,68 +12,38 @@ concurrency:
 
 permissions:
   contents: read # for checkout
+  id-token: write # OIDC token for Sigstore signing
+  attestations: write # persist build-provenance attestations
 
 jobs:
   linux_nix:
     uses: SpiralP/github-reusable-workflows/.github/workflows/build.yml@4b41639a9fc865b20a6a32e51b70555a54759db0 # main
 
-  windows_x86:
+  windows:
     name: Build Windows ${{ matrix.config.arch }}
     runs-on: windows-2025
     strategy:
       fail-fast: false
       matrix:
         config:
-          - arch: x86_64
-            target: x86_64-pc-windows-msvc
-          # - arch: i686
-          #   target: i686-pc-windows-msvc
-
+          - { arch: x86_64, target: x86_64-pc-windows-msvc }
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Add rust target
-        run: rustup target add ${{ matrix.config.target }}
-
-      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+      - uses: SpiralP/github-reusable-workflows/.github/actions/build-classicube-plugin@4b41639a9fc865b20a6a32e51b70555a54759db0 # main
         with:
-          key: ${{ matrix.config.target }}
+          arch: ${{ matrix.config.arch }}
+          target: ${{ matrix.config.target }}
 
-      - name: Build
-        run: |
-          cargo build --target ${{ matrix.config.target }} --release
-
-      - uses: taiki-e/install-action@fa0dd4cd0a40696e6f9766370614a5ce482e6aa8 # v2.77.5
-        with:
-          tool: cargo-nextest
-
-      - name: Test
-        run: |
-          cargo nextest run --target ${{ matrix.config.target }} --release --no-capture
-          Move-Item `
-            -Path 'target\${{ matrix.config.target }}\release\classicube_mention_flash_plugin.dll' `
-            -Destination '.\classicube_mention_flash_windows_${{ matrix.config.arch }}.dll'
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: classicube_mention_flash_windows_${{ matrix.config.arch }}
-          path: classicube_mention_flash_windows_${{ matrix.config.arch }}.dll
-
-  linux_x86:
+  linux:
     name: Build Linux ${{ matrix.config.arch }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         config:
-          - arch: x86_64
-            target: x86_64-unknown-linux-gnu
-          # - arch: i686
-          #   target: i686-unknown-linux-gnu
-
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu }
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
       - name: Install x86_64 deps
         if: ${{ matrix.config.arch == 'x86_64' }}
         run: |
@@ -89,33 +59,10 @@ jobs:
             gcc-multilib g++-multilib \
             libx11-dev:i386
           echo "PKG_CONFIG_ALLOW_CROSS=1" >> "$GITHUB_ENV"
-
-      - name: Add rust target
-        run: rustup target add ${{ matrix.config.target }}
-
-      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+      - uses: SpiralP/github-reusable-workflows/.github/actions/build-classicube-plugin@4b41639a9fc865b20a6a32e51b70555a54759db0 # main
         with:
-          key: ${{ matrix.config.target }}
-
-      - name: Build
-        run: |
-          cargo build --target ${{ matrix.config.target }} --release
-          file 'target/${{ matrix.config.target }}/release/libclassicube_mention_flash_plugin.so'
-
-      - uses: taiki-e/install-action@fa0dd4cd0a40696e6f9766370614a5ce482e6aa8 # v2.77.5
-        with:
-          tool: cargo-nextest
-
-      - name: Test
-        run: |
-          cargo nextest run --target ${{ matrix.config.target }} --release --no-capture
-          mv 'target/${{ matrix.config.target }}/release/libclassicube_mention_flash_plugin.so' \
-            './classicube_mention_flash_linux_${{ matrix.config.arch }}.so'
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: classicube_mention_flash_linux_${{ matrix.config.arch }}
-          path: classicube_mention_flash_linux_${{ matrix.config.arch }}.so
+          arch: ${{ matrix.config.arch }}
+          target: ${{ matrix.config.target }}
 
   mac:
     # !!! disabled: x11 isn't available on macOS, flash.rs has no macOS path
@@ -126,37 +73,10 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - arch: aarch64
-            target: aarch64-apple-darwin
-          # - arch: x86_64
-          #   target: x86_64-apple-darwin
-
+          - { arch: aarch64, target: aarch64-apple-darwin }
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Add rust target
-        run: rustup target add ${{ matrix.config.target }}
-
-      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+      - uses: SpiralP/github-reusable-workflows/.github/actions/build-classicube-plugin@4b41639a9fc865b20a6a32e51b70555a54759db0 # main
         with:
-          key: ${{ matrix.config.target }}
-
-      - name: Build
-        run: |
-          cargo build --target ${{ matrix.config.target }} --release
-          file 'target/${{ matrix.config.target }}/release/libclassicube_mention_flash_plugin.dylib'
-
-      - uses: taiki-e/install-action@fa0dd4cd0a40696e6f9766370614a5ce482e6aa8 # v2.77.5
-        with:
-          tool: cargo-nextest
-
-      - name: Test
-        run: |
-          cargo nextest run --target ${{ matrix.config.target }} --release --no-capture
-          mv 'target/${{ matrix.config.target }}/release/libclassicube_mention_flash_plugin.dylib' \
-            'classicube_mention_flash_macos_${{ matrix.config.arch }}.dylib'
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: classicube_mention_flash_macos_${{ matrix.config.arch }}
-          path: classicube_mention_flash_macos_${{ matrix.config.arch }}.dylib
+          arch: ${{ matrix.config.arch }}
+          target: ${{ matrix.config.target }}

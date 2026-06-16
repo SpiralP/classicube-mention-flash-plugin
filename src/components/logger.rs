@@ -12,11 +12,19 @@ impl Component for Logger {
 
     fn init(&mut self) {
         let debug = cfg!(debug_assertions);
+        let other_crates = false;
+
         let level = if debug { "debug" } else { "info" };
         let my_crate_name = env!("CARGO_PKG_NAME").replace('-', "_");
 
-        let filter = EnvFilter::from_default_env()
-            .add_directive(format!("{my_crate_name}={level}").parse().unwrap());
+        let default_directive = if other_crates {
+            level.parse().unwrap()
+        } else {
+            format!("{my_crate_name}={level}").parse().unwrap()
+        };
+        let filter = EnvFilter::builder()
+            .with_default_directive(default_directive)
+            .from_env_lossy();
 
         if let Err(e) = tracing_subscriber::fmt()
             .with_env_filter(filter)

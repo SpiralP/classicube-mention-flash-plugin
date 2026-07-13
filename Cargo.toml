@@ -11,7 +11,7 @@ crate-type = ["cdylib"]
 anyhow = "=1.0.103"
 classicube-helpers = { git = "https://github.com/SpiralP/rust-classicube-helpers.git" }
 classicube-sys = "=6.0.4"
-regex = "=1.12.4"
+regex = "=1.13.0"
 tracing = "=0.1.44"
 tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
 

@@ -13,14 +13,14 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.103"
+version = "1.0.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a4385e2e34eb35d6b3efe798b9eb88096925d87726c0798709bf56d9ed84af3"
+checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "async-dispatcher"
 version = "0.1.0"
-source = "git+https://github.com/SpiralP/rust-async-dispatcher.git?branch=main#e31354a7739f18ce65f149941541dbb31d35a578"
+source = "git+https://github.com/SpiralP/rust-async-dispatcher.git#e31354a7739f18ce65f149941541dbb31d35a578"
 dependencies = [
  "futures",
 ]
@@ -95,11 +95,11 @@ dependencies = [
 
 [[package]]
 name = "classicube-helpers"
-version = "4.0.0+ClassiCube.1.3.8"
-source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#c9d3a1bf28c8582abc49d4a08832208e203767df"
+version = "5.1.0+ClassiCube.1.3.8"
+source = "git+https://github.com/SpiralP/rust-classicube-helpers.git#735f03ac5c2a831d51d15c26b6a027f46b177226"
 dependencies = [
  "async-dispatcher",
- "classicube-sys 5.0.0+ClassiCube.1.3.8",
+ "classicube-sys",
  "futures",
  "futures-timer",
  "paste",
@@ -113,25 +113,12 @@ version = "1.1.4"
 dependencies = [
  "anyhow",
  "classicube-helpers",
- "classicube-sys 6.0.4+ClassiCube.1.3.8",
+ "classicube-sys",
  "regex",
  "tracing",
  "tracing-subscriber",
  "winapi",
  "x11",
-]
-
-[[package]]
-name = "classicube-sys"
-version = "5.0.0+ClassiCube.1.3.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ff8b288cd38f7685b2de04f754bb679d212fc6b1f497100ca014cb842da050f"
-dependencies = [
- "bindgen",
- "cc",
- "fs_extra",
- "paste",
- "regex",
 ]
 
 [[package]]
@@ -458,9 +445,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.12.4"
+version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1292b7759ae1cb9ec195452d1390a074f0cd8541ab7a5a8c31cd6db45d4a6ba"
+checksum = "f020237b6c8eed93db2e2cb53c00c60a8e1bc73da7d073199a1180401450218d"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -470,9 +457,9 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.4.14"
+version = "0.4.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e1dd4122fc1595e8162618945476892eefca7b88c52820e74af6262213cae8f"
+checksum = "8fcfdb36bda0c880c5931cdc7a2bcdc8ba4556847b9d912bca70bc94708711ad"
 dependencies = [
  "aho-corasick",
  "memchr",

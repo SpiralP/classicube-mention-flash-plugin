@@ -40,7 +40,7 @@ jobs:
 
   linux:
     name: Build Linux ${{ matrix.config.arch }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -72,7 +72,7 @@ jobs:
     # !!! disabled: x11 isn't available on macOS, flash.rs has no macOS path
     if: false
     name: Build MacOS ${{ matrix.config.arch }}
-    runs-on: macos-15
+    runs-on: macos-26
     strategy:
       fail-fast: false
       matrix:
